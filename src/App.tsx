@@ -8,6 +8,27 @@ const TRACKS = {
   slide5: "https://files.catbox.moe/taqsn0.mp3",
 };
 
+const PARTY_DATE = new Date("2026-06-27T17:30:00");
+
+function useCountdown() {
+  const calc = () => {
+    const diff = PARTY_DATE.getTime() - Date.now();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000),
+    };
+  };
+  const [time, setTime] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setTime(calc()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
 function NeonParticles() {
   const particles = useRef(
     Array.from({ length: 18 }, (_, i) => ({
@@ -18,25 +39,16 @@ function NeonParticles() {
       delay: `${(i * 0.4) % 6}s`,
     }))
   );
-
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {particles.current.map((p) => (
         <div
           key={p.id}
           className="absolute w-px bg-gradient-to-t from-transparent via-[#1fdf64] to-transparent opacity-0"
-          style={{
-            left: p.left,
-            height: p.height,
-            bottom: "-100px",
-            animation: `float-particle ${p.duration} linear ${p.delay} infinite`,
-          }}
+          style={{ left: p.left, height: p.height, bottom: "-100px", animation: `float-particle ${p.duration} linear ${p.delay} infinite` }}
         />
       ))}
-      <div
-        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1fdf64] to-transparent opacity-10"
-        style={{ animation: "scan-line 8s linear infinite" }}
-      />
+      <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1fdf64] to-transparent opacity-10" style={{ animation: "scan-line 8s linear infinite" }} />
       <div className="absolute top-0 left-0 w-16 h-px bg-gradient-to-r from-[#1fdf64] to-transparent opacity-60" />
       <div className="absolute top-0 left-0 w-px h-16 bg-gradient-to-b from-[#1fdf64] to-transparent opacity-60" />
       <div className="absolute top-0 right-0 w-16 h-px bg-gradient-to-l from-[#1fdf64] to-transparent opacity-60" />
@@ -71,7 +83,7 @@ function MusicBars({ playing }: { playing: boolean }) {
 function Slide({ children, visible }: { children: React.ReactNode; visible: boolean }) {
   return (
     <div
-      className="absolute inset-0 flex flex-col items-center justify-center px-6 overflow-y-auto"
+      className="absolute inset-0 flex flex-col items-center justify-start px-5 overflow-y-auto"
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(40px)",
@@ -80,7 +92,41 @@ function Slide({ children, visible }: { children: React.ReactNode; visible: bool
         zIndex: visible ? 10 : 0,
       }}
     >
-      {children}
+      <div className="w-full max-w-[390px] mx-auto flex flex-col items-center min-h-full justify-center py-16">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CountdownBlock() {
+  const { days, hours, minutes, seconds } = useCountdown();
+  const units = [
+    { val: days, label: "дней" },
+    { val: hours, label: "часов" },
+    { val: minutes, label: "минут" },
+    { val: seconds, label: "секунд" },
+  ];
+  return (
+    <div className="w-full">
+      <p className="text-white/40 text-xs uppercase tracking-widest text-center mb-3">до праздника</p>
+      <div className="grid grid-cols-4 gap-2 w-full">
+        {units.map(({ val, label }) => (
+          <div
+            key={label}
+            className="flex flex-col items-center py-3 rounded-xl"
+            style={{ background: "rgba(31,223,100,0.05)", border: "1px solid rgba(31,223,100,0.2)" }}
+          >
+            <span
+              className="font-display text-2xl font-black tabular-nums"
+              style={{ color: "#1fdf64", textShadow: "0 0 12px rgba(31,223,100,0.5)" }}
+            >
+              {String(val).padStart(2, "0")}
+            </span>
+            <span className="text-white/30 text-[9px] uppercase tracking-wider mt-0.5">{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -124,11 +170,14 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden select-none">
+    <div
+      className="relative bg-black overflow-hidden select-none"
+      style={{ width: "100vw", height: "100dvh" }}
+    >
       <NeonParticles />
 
       {/* Top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3">
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
         <span
           className="font-display text-xl font-bold tracking-[0.3em] uppercase neon-flicker"
           style={{ color: "#1fdf64", textShadow: "0 0 10px rgba(31,223,100,0.6), 0 0 30px rgba(31,223,100,0.3)" }}
@@ -140,15 +189,18 @@ export default function App() {
 
       {/* ─── Slide 1 ─── */}
       <Slide visible={slide === 0}>
-        <div className="flex flex-col items-center text-center gap-6 max-w-sm w-full pt-16 pb-8">
+        <div className="flex flex-col items-center text-center gap-5 w-full">
           <div className="animate-fade-in-up animate-delay-1 font-display text-xs tracking-[0.5em] uppercase" style={{ color: "#1fdf64" }}>
             2026 год
           </div>
 
           <div className="animate-fade-in-up animate-delay-2">
-            <div className="font-display text-5xl font-black tracking-tight leading-none">не просто</div>
-            <div className="font-display text-5xl font-black tracking-tight leading-none">музыкальные</div>
-            <div className="font-display text-5xl font-black tracking-tight leading-none neon-flicker" style={{ color: "#1fdf64" }}>
+            <div className="font-display text-[clamp(2.5rem,12vw,3.5rem)] font-black tracking-tight leading-none">не просто</div>
+            <div className="font-display text-[clamp(2.5rem,12vw,3.5rem)] font-black tracking-tight leading-none">музыкальные</div>
+            <div
+              className="font-display text-[clamp(2.5rem,12vw,3.5rem)] font-black tracking-tight leading-none neon-flicker"
+              style={{ color: "#1fdf64" }}
+            >
               итоги
             </div>
           </div>
@@ -158,7 +210,7 @@ export default function App() {
           </p>
 
           <div
-            className="animate-fade-in-up animate-delay-4 w-full py-3 px-5 rounded-lg text-left"
+            className="animate-fade-in-up animate-delay-4 w-full py-3 px-5 rounded-xl text-left"
             style={{ background: "rgba(31,223,100,0.06)", border: "1px solid rgba(31,223,100,0.2)" }}
           >
             <span className="text-white/40 text-xs uppercase tracking-widest block mb-1">Для кого</span>
@@ -190,33 +242,31 @@ export default function App() {
 
       {/* ─── Slide 2 ─── */}
       <Slide visible={slide === 1}>
-        <div className="flex flex-col items-center text-center gap-6 max-w-sm w-full pt-16 pb-16">
+        <div className="flex flex-col items-center text-center gap-5 w-full">
           <div className="animate-fade-in-up animate-delay-1 font-display text-xs tracking-[0.5em] uppercase" style={{ color: "#1fdf64" }}>
             трек года
           </div>
 
-          {/* Vinyl */}
           <div
-            className="animate-fade-in-up animate-delay-2 relative w-36 h-36 rounded-full flex items-center justify-center shrink-0"
+            className="animate-fade-in-up animate-delay-2 relative rounded-full flex items-center justify-center shrink-0"
             style={{
+              width: "clamp(120px, 35vw, 160px)",
+              height: "clamp(120px, 35vw, 160px)",
               background: "radial-gradient(circle at 35% 35%, #2a2a2a, #0a0a0a)",
               border: "3px solid rgba(31,223,100,0.3)",
               boxShadow: "0 0 30px rgba(31,223,100,0.2), inset 0 0 20px rgba(0,0,0,0.5)",
               animation: isPlaying ? "spin 4s linear infinite" : "none",
             }}
           >
-            <div
-              className="w-10 h-10 rounded-full z-10"
-              style={{ background: "radial-gradient(circle, #1fdf64 20%, #0a0a0a 21%)", boxShadow: "0 0 10px rgba(31,223,100,0.5)" }}
-            />
+            <div className="w-10 h-10 rounded-full z-10" style={{ background: "radial-gradient(circle, #1fdf64 20%, #0a0a0a 21%)", boxShadow: "0 0 10px rgba(31,223,100,0.5)" }} />
             {[50, 42, 34].map((size) => (
               <div key={size} className="absolute rounded-full" style={{ width: `${size}%`, height: `${size}%`, border: "1px solid rgba(255,255,255,0.05)" }} />
             ))}
           </div>
 
           <div className="animate-fade-in-up animate-delay-3">
-            <div className="font-display text-3xl font-bold leading-tight">Что связывает</div>
-            <div className="font-display text-3xl font-bold leading-tight" style={{ color: "#1fdf64" }}>нас с тобой</div>
+            <div className="font-display text-[clamp(1.6rem,8vw,2.2rem)] font-bold leading-tight">Что связывает</div>
+            <div className="font-display text-[clamp(1.6rem,8vw,2.2rem)] font-bold leading-tight" style={{ color: "#1fdf64" }}>нас с тобой</div>
           </div>
 
           <div
@@ -240,13 +290,13 @@ export default function App() {
 
       {/* ─── Slide 3 ─── */}
       <Slide visible={slide === 2}>
-        <div className="flex flex-col items-center text-center gap-6 max-w-sm w-full pt-16 pb-16">
+        <div className="flex flex-col items-center text-center gap-5 w-full">
           <div className="animate-fade-in-up animate-delay-1 font-display text-xs tracking-[0.5em] uppercase" style={{ color: "#1fdf64" }}>
             момент года
           </div>
 
           <div
-            className="animate-fade-in-up animate-delay-2 w-full rounded-2xl overflow-hidden"
+            className="animate-fade-in-up animate-delay-2 w-full rounded-2xl"
             style={{
               background: "linear-gradient(135deg, rgba(31,223,100,0.1) 0%, rgba(0,0,0,0) 60%)",
               border: "1px solid rgba(31,223,100,0.25)",
@@ -254,9 +304,8 @@ export default function App() {
             }}
           >
             <div className="p-6">
-              <div className="font-display text-4xl font-black mb-4 leading-tight">
-                Момент<br />
-                <span style={{ color: "#1fdf64" }}>с тобой</span>
+              <div className="font-display text-[clamp(2rem,10vw,2.8rem)] font-black mb-4 leading-tight">
+                Момент<br /><span style={{ color: "#1fdf64" }}>с тобой</span>
               </div>
               <div className="h-px w-full mb-4" style={{ background: "linear-gradient(to right, #1fdf64, transparent)" }} />
               <p className="text-white/70 text-sm leading-relaxed">
@@ -283,14 +332,14 @@ export default function App() {
 
       {/* ─── Slide 4 ─── */}
       <Slide visible={slide === 3}>
-        <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full pt-16 pb-16">
+        <div className="flex flex-col items-center text-center gap-4 w-full">
           <div className="animate-fade-in-up animate-delay-1 font-display text-xs tracking-[0.5em] uppercase" style={{ color: "#1fdf64" }}>
             твоя статистика
           </div>
 
-          <div className="font-display text-3xl font-black animate-fade-in-up animate-delay-2">Наши цифры</div>
+          <div className="font-display text-[clamp(1.8rem,8vw,2.4rem)] font-black animate-fade-in-up animate-delay-2">Наши цифры</div>
 
-          <div className="animate-fade-in-up animate-delay-2 w-full space-y-3">
+          <div className="animate-fade-in-up animate-delay-2 w-full space-y-2">
             {[
               { label: "Сколько мы дружим", value: "950", unit: "дней", desc: "", color: "#1fdf64" },
               { label: "Ты был(а) на моём ДР", value: "1-й", unit: "раз", desc: "это будет твой первый раз", color: "#fff" },
@@ -298,7 +347,7 @@ export default function App() {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="w-full py-4 px-5 rounded-xl text-left flex items-center justify-between gap-4"
+                className="w-full py-3 px-4 rounded-xl text-left flex items-center justify-between gap-3"
                 style={{
                   background: "rgba(255,255,255,0.03)",
                   border: "1px solid rgba(255,255,255,0.08)",
@@ -306,17 +355,14 @@ export default function App() {
                 }}
               >
                 <div className="flex-1">
-                  <p className="text-white/40 text-xs uppercase tracking-wider mb-1">{stat.label}</p>
-                  {stat.desc && <p className="text-white/60 text-xs italic mt-1">{stat.desc}</p>}
+                  <p className="text-white/40 text-xs uppercase tracking-wider mb-0.5">{stat.label}</p>
+                  {stat.desc && <p className="text-white/55 text-xs italic">{stat.desc}</p>}
                 </div>
                 <div className="text-right shrink-0">
-                  <span
-                    className="font-display text-3xl font-black"
-                    style={{ color: stat.color, textShadow: stat.color === "#1fdf64" ? "0 0 20px rgba(31,223,100,0.5)" : "none" }}
-                  >
+                  <span className="font-display text-2xl font-black" style={{ color: stat.color, textShadow: stat.color === "#1fdf64" ? "0 0 20px rgba(31,223,100,0.5)" : "none" }}>
                     {stat.value}
                   </span>
-                  {stat.unit && <div className="text-white/40 text-xs">{stat.unit}</div>}
+                  {stat.unit && <div className="text-white/40 text-[10px]">{stat.unit}</div>}
                 </div>
               </div>
             ))}
@@ -337,26 +383,26 @@ export default function App() {
 
       {/* ─── Slide 5 ─── */}
       <Slide visible={slide === 4}>
-        <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full pt-16 pb-8">
+        <div className="flex flex-col items-center text-center gap-4 w-full">
           <div className="animate-fade-in-up animate-delay-1 font-display text-xs tracking-[0.5em] uppercase" style={{ color: "#1fdf64" }}>
             ты приглашён
           </div>
 
           <div
-            className="animate-fade-in-up animate-delay-2 w-full rounded-2xl p-6"
+            className="animate-fade-in-up animate-delay-2 w-full rounded-2xl p-5"
             style={{
               background: "linear-gradient(135deg, rgba(31,223,100,0.08) 0%, rgba(0,0,0,0) 100%)",
               border: "1px solid rgba(31,223,100,0.3)",
               boxShadow: "0 0 60px rgba(31,223,100,0.12)",
             }}
           >
-            <div className="font-display text-4xl font-black mb-1">Жду тебя</div>
-            <div className="font-display text-2xl font-bold mb-4" style={{ color: "#1fdf64" }}>
+            <div className="font-display text-[clamp(2rem,9vw,2.8rem)] font-black mb-1">Жду тебя</div>
+            <div className="font-display text-[clamp(1.3rem,6vw,1.8rem)] font-bold mb-4" style={{ color: "#1fdf64" }}>
               27 июня в 17:30
             </div>
-            <div className="h-px w-full mb-4" style={{ background: "linear-gradient(to right, transparent, #1fdf64, transparent)" }} />
+            <div className="h-px w-full mb-3" style={{ background: "linear-gradient(to right, transparent, #1fdf64, transparent)" }} />
             <p className="text-white/70 text-sm leading-relaxed mb-1">Московский проспект 139А</p>
-            <p className="text-white/50 text-xs mb-3">м. Электросила (вход с торца через железную калитку)</p>
+            <p className="text-white/50 text-xs mb-3">м. Электросила · вход с торца через железную калитку</p>
             <div
               className="inline-block py-1 px-3 rounded-full text-xs font-bold tracking-widest uppercase"
               style={{ background: "rgba(31,223,100,0.15)", border: "1px solid rgba(31,223,100,0.4)", color: "#1fdf64" }}
@@ -365,28 +411,31 @@ export default function App() {
             </div>
           </div>
 
+          {/* Countdown */}
+          <div className="animate-fade-in-up animate-delay-3 w-full">
+            <CountdownBlock />
+          </div>
+
           <div
-            className="animate-fade-in-up animate-delay-3 w-full rounded-xl p-5 text-left space-y-3"
+            className="animate-fade-in-up animate-delay-3 w-full rounded-xl p-4 text-left space-y-2"
             style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
-            <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Что тебя ждёт?</p>
+            <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Что тебя ждёт?</p>
             {[
               { time: "17:30–18:30", desc: "сбор, лёгкий перекус, первые тосты" },
-              { time: "18:30–20:30", desc: "вкусно кушаем, вкусно пьём и проходим квиз по Иришке" },
+              { time: "18:30–20:30", desc: "вкусно кушаем, пьём и проходим квиз по Иришке" },
               { time: "20:30–22:00", desc: "слушаем музыку, общаемся" },
             ].map((item, i) => (
               <div key={i} className="flex gap-3 items-start">
-                <span className="font-display text-xs font-bold shrink-0 mt-0.5" style={{ color: "#1fdf64" }}>
-                  {item.time}
-                </span>
+                <span className="font-display text-[10px] font-bold shrink-0 mt-0.5" style={{ color: "#1fdf64" }}>{item.time}</span>
                 <span className="text-white/60 text-xs leading-relaxed">{item.desc}</span>
               </div>
             ))}
           </div>
 
-          <p className="animate-fade-in-up animate-delay-3 text-white/40 text-xs">Мой номер знаешь!</p>
+          <p className="animate-fade-in-up animate-delay-3 text-white/35 text-xs">Мой номер знаешь!</p>
 
-          <div className="animate-fade-in-up animate-delay-4 w-full space-y-3 pb-4">
+          <div className="animate-fade-in-up animate-delay-4 w-full space-y-3 pb-2">
             <a
               href="https://docs.google.com/document/d/19nD4DwoFk2GaUhR5G1j0_YAmeqTiTXoMtmebOjLU_JA/edit?tab=t.0"
               target="_blank"
@@ -409,7 +458,7 @@ export default function App() {
 
       {/* Slide dots */}
       {slide > 0 && (
-        <div className="fixed bottom-6 left-0 right-0 flex justify-center gap-2 z-50">
+        <div className="fixed bottom-5 left-0 right-0 flex justify-center gap-2 z-50">
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
